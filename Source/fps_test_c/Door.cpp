@@ -3,6 +3,8 @@
 
 #include "Door.h"
 
+#include "Kismet/GameplayStatics.h"
+
 // Sets default values
 ADoor::ADoor()
 {
@@ -20,20 +22,27 @@ ADoor::ADoor()
 
 	BoxTrigger = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxTrigger"));
 	BoxTrigger->SetBoxExtent(FVector(300.f));
-	BoxTrigger->SetupAttachment(RootComponent);
+	BoxTrigger->SetupAttachment(RootComponent);	
 }
 
 // Called when the game starts or when spawned
 void ADoor::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	BoxTrigger->OnComponentBeginOverlap.AddDynamic(this, &ADoor::OnTriggerBeginOverlap);
+	BoxTrigger->OnComponentEndOverlap.AddDynamic(this, &ADoor::OnTriggerEndOverlap);
 }
 
-// Called every frame
-void ADoor::Tick(float DeltaTime)
+void ADoor::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComponent,
+	AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	Super::Tick(DeltaTime);
-
+	GEngine->AddOnScreenDebugMessage(-1, 5.0, FColor::Green, FString("IN"));
+	EnableInput(GetWorld()->GetFirstPlayerController());
 }
 
+void ADoor::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.0, FColor::Red, FString("OUT"));
+	DisableInput(GetWorld()->GetFirstPlayerController());
+}
